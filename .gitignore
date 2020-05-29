@@ -9,3 +9,5 @@ public/uploads
 public/nginx.htaccess
 public/index.html
 public/live-logo.gif
+view/package-lock.json
+view/config.js
