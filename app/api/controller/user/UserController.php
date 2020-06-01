@@ -273,7 +273,7 @@ class UserController
         if ($addressInfo['id'] && UserAddress::be(['id' => $addressInfo['id'], 'uid' => $request->uid(), 'is_del' => 0])) {
             $id = $addressInfo['id'];
             unset($addressInfo['id']);
-            if ($addressInfo['city_id']==0)
+            if ($addressInfo['city_id'] == 0)
                 unset($addressInfo['city_id']);
             if (UserAddress::edit($addressInfo, $id, 'id')) {
                 if ($addressInfo['is_default'])
@@ -570,9 +570,27 @@ class UserController
             ['limit'],
             ['type']
         ], $request);
+        $users = User::brokerageRank($data);
+        foreach ($users as $key => $item) {
+            if ($item['brokerage_price'] == '0.00' || $item['brokerage_price'] == 0 || !$item['brokerage_price']) {
+                unset($users[$key]);
+            }
+        }
+        $position_tmp = User::brokerageRank(['type' => $data['type'], 'page' => 0, 'limit' => 99999]);
+        $position_tmp_one = array_column($position_tmp, 'uid');
+        $position_tmp_two = array_column($position_tmp, 'brokerage_price', 'uid');
+        if (!in_array($request->uid(), $position_tmp_one)) {
+            $position = 0;
+        } else {
+            if ($position_tmp_two[$request->uid()] == 0.00) {
+                $position = 0;
+            } else {
+                $position = array_search($request->uid(), $position_tmp_one) + 1;
+            }
+        }
         return app('json')->success([
-            'rank' => User::brokerageRank($data),
-            'position' => User::currentUserRank($data['type'], $request->user()['brokerage_price'])
+            'rank' => $users,
+            'position' => $position
         ]);
 
     }

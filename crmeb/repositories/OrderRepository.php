@@ -120,6 +120,8 @@ class OrderRepository
         $res1 = AdminStoreOrder::gainUserIntegral($order);
         $res2 = User::backOrderBrokerage($order);
         AdminStoreOrder::orderTakeAfter($order);
+        //满赠优惠券
+        WechatUser::userTakeOrderGiveCoupon($order['uid'], $order['total_price']);
         UserBill::where('uid', $order['uid'])->where('link_id', $order['id'])->where('type', 'pay_money')->update(['take' => 1]);
         if (!($res1 && $res2)) exception('收货失败!');
     }

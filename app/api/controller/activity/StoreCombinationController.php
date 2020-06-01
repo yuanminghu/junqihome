@@ -8,6 +8,7 @@ use app\admin\model\system\SystemAttachment;
 use app\models\routine\RoutineCode;
 use app\models\store\StoreCombination;
 use app\models\store\StorePink;
+use app\models\store\StoreProduct;
 use app\models\store\StoreProductAttr;
 use app\models\store\StoreProductRelation;
 use app\models\store\StoreProductReply;
@@ -62,7 +63,7 @@ class StoreCombinationController
         if (!strlen(trim($combinationOne['unit_name']))) $combinationOne['unit_name'] = '个';
         $uid = $request->uid();
         $combinationOne['userCollect'] = StoreProductRelation::isProductRelation($combinationOne['product_id'], $uid, 'collect');
-        $combinationOne['description'] = htmlspecialchars_decode(StoreDescription::getDescription($id,3));
+        $combinationOne['description'] = htmlspecialchars_decode(StoreDescription::getDescription($id, 3));
         $data['pink'] = $pink;
         $data['pindAll'] = $pindAll;
         $data['storeInfo'] = $combinationOne;
@@ -78,12 +79,22 @@ class StoreCombinationController
                 $data['replyChance'] = bcmul($data['replyChance'], 100, 3);
             }
         } else $data['replyChance'] = 0;
-        list($productAttr, $productValue) = StoreProductAttr::getProductAttrDetail($id, $uid, 0, 3);
-        foreach ($productValue as $k => $v) {
-            $productValue[$k]['product_stock'] = StoreProductAttrValue::where('product_id',$combinationOne['product_id'])->where('suk',$v['suk'])->where('type',0)->value('stock');
+        if (StoreProduct::be(['spec_type' => 1, 'id' => $combinationOne['product_id']])) {
+            list($productAttr, $productValue) = StoreProductAttr::getProductAttrDetail($id, $uid, 0, 3);
+            foreach ($productValue as $k => $v) {
+                $productValue[$k]['product_stock'] = StoreProductAttrValue::where('product_id', $combinationOne['product_id'])->where('suk', $v['suk'])->where('type', 0)->value('stock');
+            }
+            $data['productAttr'] = $productAttr;
+            $data['productValue'] = $productValue;
+        } else {
+            $data['productAttr'] = [];
+            $data['productValue'] = [];
+            list($productAttr, $productValue) = StoreProductAttr::getProductAttrDetail($id, $uid, 0, 3);
+            $value = $productValue['默认'] ?? [];
+            $data['storeInfo']['product_stock'] = $value['stock'] ?? 0;
+            $data['storeInfo']['quota'] = $value['quota'] ?? 0;
+            $data['storeInfo']['quota_show'] = $value['quota_show'] ?? 0;
         }
-        $data['productAttr'] = $productAttr;
-        $data['productValue'] = $productValue;
         return app('json')->successful($data);
     }
 
@@ -147,7 +158,7 @@ class StoreCombinationController
         $data['current_pink_order'] = StorePink::getCurrentPink($id, $user['uid']);
         list($productAttr, $productValue) = StoreProductAttr::getProductAttrDetail($combinationOne['id'], $user['uid'], 0, 3);
         foreach ($productValue as $k => $v) {
-            $productValue[$k]['product_stock'] = StoreProductAttrValue::where('product_id',$combinationOne['product_id'])->where('suk',$v['suk'])->where('type',0)->value('stock');
+            $productValue[$k]['product_stock'] = StoreProductAttrValue::where('product_id', $combinationOne['product_id'])->where('suk', $v['suk'])->where('type', 0)->value('stock');
         }
         $data['store_combination']['productAttr'] = $productAttr;
         $data['store_combination']['productValue'] = $productValue;

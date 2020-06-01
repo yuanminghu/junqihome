@@ -114,7 +114,10 @@ class UserBill extends BaseModel
             ->where('status', 1)->sum('number');
         $count2 = self::where('uid', $uid)->where('category', 'now_money')->where('type', 'brokerage')->where('pm', 0)
             ->where('status', 1)->sum('number');
-        $count = $count1 - $count2;
+        if ($count1 > $count2)
+            $count = bcsub($count1, $count2, 2);
+        else
+            $count = 0;
         return $count;
     }
 
@@ -197,14 +200,22 @@ class UserBill extends BaseModel
      */
     public static function getRecordList($uid, $page = 1, $limit = 8, $category = 'now_money', $type = '')
     {
+        $uids = User::where('spread_uid', $uid)->column('uid');
         $model = new self;
         $model = $model->alias('b');
         $model = $model->field("FROM_UNIXTIME(b.add_time, '%Y-%m') as time");
-        $model = $model->where('b.uid', $uid);
+//        $model = $model->where('b.uid', $uid);
         $model = $model->join('StoreOrder o', 'o.id=b.link_id');
         $model = $model->where('o.refund_status', 0);
-        if (strlen(trim($type))) $model = $model->whereIn('b.type', $type);
+//        if (strlen(trim($type))) $model = $model->whereIn('b.type', $type);
         $model = $model->where('b.category', $category);
+        $model = $model->where(function ($query) use ($uid, $type, $uids) {
+            $query->where(function ($query1) use ($uid, $type) {
+                $query1->where('b.uid', $uid)->where('b.type', $type);
+            })->whereOr(function ($query2) use ($uids, $type) {
+                $query2->where('b.uid', 'in', $uids)->where('b.type', 'pay_money');
+            });
+        });
         $model = $model->group("FROM_UNIXTIME(b.add_time, '%Y-%m')");
         $model = $model->order('time desc');
         $model = $model->page($page, $limit);
@@ -300,6 +311,7 @@ class UserBill extends BaseModel
      */
     public static function getRecordOrderCount($uid, $category = 'now_money', $type = 'brokerage')
     {
+        if (!strlen(trim($uid))) return 0;
         $uids = User::where('spread_uid', $uid)->column('uid');
         $model = new self;
         $model = $model->alias('b');

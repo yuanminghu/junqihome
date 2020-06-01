@@ -145,17 +145,19 @@ class Index extends AuthController
         header('Content-type:text/json');
         $cycle = $this->request->param('cycle') ?: 'thirtyday';//默认30天
         $datalist = [];
+        $where = ['is_del' => 0, 'paid' => 1, 'refund_status' => 0];
         switch ($cycle) {
             case 'thirtyday':
-                $datebefor = date('Y-m-d', strtotime('-30 day'));
-                $dateafter = date('Y-m-d');
+                $datebefor = date('Y-m-d 00:00:00', strtotime('-30 day'));
+                $dateafter = date('Y-m-d 23:59:59');
                 //上期
                 $pre_datebefor = date('Y-m-d', strtotime('-60 day'));
                 $pre_dateafter = date('Y-m-d', strtotime('-30 day'));
-                for ($i = -30; $i < 0; $i++) {
+                for ($i = -30; $i < 1; $i++) {
                     $datalist[date('m-d', strtotime($i . ' day'))] = date('m-d', strtotime($i . ' day'));
                 }
                 $order_list = StoreOrderModel::where('add_time', 'between time', [$datebefor, $dateafter])
+                    ->where($where)
                     ->field("FROM_UNIXTIME(add_time,'%m-%d') as day,count(*) as count,sum(pay_price) as price")
                     ->group("FROM_UNIXTIME(add_time, '%Y%m%d')")
                     ->order('add_time asc')
@@ -193,6 +195,7 @@ class Index extends AuthController
                 $chartdata['series'][] = ['name' => $chartdata['legend'][1], 'type' => 'bar', 'itemStyle' => $series, 'data' => $data['count']];//分类2值
                 //统计总数上期
                 $pre_total = StoreOrderModel::where('add_time', 'between time', [$pre_datebefor, $pre_dateafter])
+                    ->where($where)
                     ->field("count(*) as count,sum(pay_price) as price")
                     ->find();
                 if ($pre_total) {
@@ -205,6 +208,7 @@ class Index extends AuthController
                 }
                 //统计总数
                 $total = StoreOrderModel::where('add_time', 'between time', [$datebefor, $dateafter])
+                    ->where($where)
                     ->field("count(*) as count,sum(pay_price) as price")
                     ->find();
                 if ($total) {
@@ -227,9 +231,10 @@ class Index extends AuthController
                 break;
             case 'week':
                 $weekarray = array(['周日'], ['周一'], ['周二'], ['周三'], ['周四'], ['周五'], ['周六']);
-                $datebefor = date('Y-m-d', strtotime('-1 week Monday'));
-                $dateafter = date('Y-m-d', strtotime('-1 week Sunday'));
+                $datebefor = date('Y-m-d 00:00:00)', strtotime('-1 week Monday'));
+                $dateafter = date('Y-m-d 23:59:59', strtotime('-1 week Sunday'));
                 $order_list = StoreOrderModel::where('add_time', 'between time', [$datebefor, $dateafter])
+                    ->where($where)
                     ->field("FROM_UNIXTIME(add_time,'%w') as day,count(*) as count,sum(pay_price) as price")
                     ->group("FROM_UNIXTIME(add_time, '%Y%m%e')")
                     ->order('add_time asc')
@@ -239,9 +244,10 @@ class Index extends AuthController
                 foreach ($order_list as $k => $v) {
                     $new_order_list[$v['day']] = $v;
                 }
-                $now_datebefor = date('Y-m-d', (time() - ((date('w') == 0 ? 7 : date('w')) - 1) * 24 * 3600));
-                $now_dateafter = date('Y-m-d', strtotime("+1 day"));
+                $now_datebefor = date('Y-m-d 00:00:00', (time() - ((date('w') == 0 ? 7 : date('w')) - 1) * 24 * 3600));
+                $now_dateafter = date('Y-m-d 23:59:59', strtotime("+1 day"));
                 $now_order_list = StoreOrderModel::where('add_time', 'between time', [$now_datebefor, $now_dateafter])
+                    ->where($where)
                     ->field("FROM_UNIXTIME(add_time,'%w') as day,count(*) as count,sum(pay_price) as price")
                     ->group("FROM_UNIXTIME(add_time, '%Y%m%e')")
                     ->order('add_time asc')
@@ -291,6 +297,7 @@ class Index extends AuthController
 
                 //统计总数上期
                 $pre_total = StoreOrderModel::where('add_time', 'between time', [$datebefor, $dateafter])
+                    ->where($where)
                     ->field("count(*) as count,sum(pay_price) as price")
                     ->find();
                 if ($pre_total) {
@@ -303,6 +310,7 @@ class Index extends AuthController
                 }
                 //统计总数
                 $total = StoreOrderModel::where('add_time', 'between time', [$now_datebefor, $now_dateafter])
+                    ->where($where)
                     ->field("count(*) as count,sum(pay_price) as price")
                     ->find();
                 if ($total) {
@@ -326,9 +334,10 @@ class Index extends AuthController
             case 'month':
                 $weekarray = array('01' => ['1'], '02' => ['2'], '03' => ['3'], '04' => ['4'], '05' => ['5'], '06' => ['6'], '07' => ['7'], '08' => ['8'], '09' => ['9'], '10' => ['10'], '11' => ['11'], '12' => ['12'], '13' => ['13'], '14' => ['14'], '15' => ['15'], '16' => ['16'], '17' => ['17'], '18' => ['18'], '19' => ['19'], '20' => ['20'], '21' => ['21'], '22' => ['22'], '23' => ['23'], '24' => ['24'], '25' => ['25'], '26' => ['26'], '27' => ['27'], '28' => ['28'], '29' => ['29'], '30' => ['30'], '31' => ['31']);
 
-                $datebefor = date('Y-m-01', strtotime('-1 month'));
-                $dateafter = date('Y-m-d', strtotime(date('Y-m-01')));
+                $datebefor = date('Y-m-01 00:00:00', strtotime('-1 month'));
+                $dateafter = date('Y-m-d 23:59:59', strtotime(date('Y-m-01')));
                 $order_list = StoreOrderModel::where('add_time', 'between time', [$datebefor, $dateafter])
+                    ->where($where)
                     ->field("FROM_UNIXTIME(add_time,'%d') as day,count(*) as count,sum(pay_price) as price")
                     ->group("FROM_UNIXTIME(add_time, '%Y%m%e')")
                     ->order('add_time asc')
@@ -338,9 +347,10 @@ class Index extends AuthController
                 foreach ($order_list as $k => $v) {
                     $new_order_list[$v['day']] = $v;
                 }
-                $now_datebefor = date('Y-m-01');
-                $now_dateafter = date('Y-m-d', strtotime("+1 day"));
+                $now_datebefor = date('Y-m-01 00:00:00');
+                $now_dateafter = date('Y-m-d 23:59:59', strtotime("+1 day"));
                 $now_order_list = StoreOrderModel::where('add_time', 'between time', [$now_datebefor, $now_dateafter])
+                    ->where($where)
                     ->field("FROM_UNIXTIME(add_time,'%d') as day,count(*) as count,sum(pay_price) as price")
                     ->group("FROM_UNIXTIME(add_time, '%Y%m%e')")
                     ->order('add_time asc')
@@ -391,6 +401,7 @@ class Index extends AuthController
 
                 //统计总数上期
                 $pre_total = StoreOrderModel::where('add_time', 'between time', [$datebefor, $dateafter])
+                    ->where($where)
                     ->field("count(*) as count,sum(pay_price) as price")
                     ->find();
                 if ($pre_total) {
@@ -403,6 +414,7 @@ class Index extends AuthController
                 }
                 //统计总数
                 $total = StoreOrderModel::where('add_time', 'between time', [$now_datebefor, $now_dateafter])
+                    ->where($where)
                     ->field("count(*) as count,sum(pay_price) as price")
                     ->find();
                 if ($total) {
@@ -425,9 +437,10 @@ class Index extends AuthController
                 break;
             case 'year':
                 $weekarray = array('01' => ['一月'], '02' => ['二月'], '03' => ['三月'], '04' => ['四月'], '05' => ['五月'], '06' => ['六月'], '07' => ['七月'], '08' => ['八月'], '09' => ['九月'], '10' => ['十月'], '11' => ['十一月'], '12' => ['十二月']);
-                $datebefor = date('Y-01-01', strtotime('-1 year'));
-                $dateafter = date('Y-12-31', strtotime('-1 year'));
+                $datebefor = date('Y-01-01 00:00:00', strtotime('-1 year'));
+                $dateafter = date('Y-12-31 23:59:59', strtotime('-1 year'));
                 $order_list = StoreOrderModel::where('add_time', 'between time', [$datebefor, $dateafter])
+                    ->where($where)
                     ->field("FROM_UNIXTIME(add_time,'%m') as day,count(*) as count,sum(pay_price) as price")
                     ->group("FROM_UNIXTIME(add_time, '%Y%m')")
                     ->order('add_time asc')
@@ -437,9 +450,10 @@ class Index extends AuthController
                 foreach ($order_list as $k => $v) {
                     $new_order_list[$v['day']] = $v;
                 }
-                $now_datebefor = date('Y-01-01');
-                $now_dateafter = date('Y-m-d');
+                $now_datebefor = date('Y-01-01 00:00:00');
+                $now_dateafter = date('Y-m-d 23:59:59');
                 $now_order_list = StoreOrderModel::where('add_time', 'between time', [$now_datebefor, $now_dateafter])
+                    ->where($where)
                     ->field("FROM_UNIXTIME(add_time,'%m') as day,count(*) as count,sum(pay_price) as price")
                     ->group("FROM_UNIXTIME(add_time, '%Y%m')")
                     ->order('add_time asc')
@@ -489,6 +503,7 @@ class Index extends AuthController
 
                 //统计总数上期
                 $pre_total = StoreOrderModel::where('add_time', 'between time', [$datebefor, $dateafter])
+                    ->where($where)
                     ->field("count(*) as count,sum(pay_price) as price")
                     ->find();
                 if ($pre_total) {
@@ -501,6 +516,7 @@ class Index extends AuthController
                 }
                 //统计总数
                 $total = StoreOrderModel::where('add_time', 'between time', [$now_datebefor, $now_dateafter])
+                    ->where($where)
                     ->field("count(*) as count,sum(pay_price) as price")
                     ->find();
                 if ($total) {

@@ -74,7 +74,7 @@
             >
             {{ order._add_time }}
           </div>
-          <div class="font-color-red">{{ getStatus(order) }}</div>
+          <div class="font-color-red">{{ order._status._title }}</div>
         </div>
         <div @click="$router.push({ path: '/order/detail/' + order.order_id })">
           <div

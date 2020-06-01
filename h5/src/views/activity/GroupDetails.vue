@@ -345,7 +345,7 @@ export default {
           that.getImageBase64();
           that.setShare();
           that.updateTitle();
-          if (that.attr.productAttr != 0) that.DefaultSelect();
+          that.DefaultSelect();
         })
         .catch(err => {
           that.$dialog.error(err.msg);
@@ -390,20 +390,36 @@ export default {
         this.$set(this.attr.productSelect, "store_name", this.storeInfo.title);
         this.$set(this.attr.productSelect, "image", this.storeInfo.image);
         this.$set(this.attr.productSelect, "price", this.storeInfo.price);
-        this.$set(this.attr.productSelect, "quota", 0);
+        this.$set(this.attr.productSelect, "quota", this.storeInfo.quota || 0);
         this.$set(this.attr.productSelect, "unique", "");
         this.$set(this.attr.productSelect, "cart_num", 0);
-        this.$set(this.attr.productSelect, "quota_show", 0);
-        this.$set(this.attr.productSelect, "product_stock", 0);
+        this.$set(
+          this.attr.productSelect,
+          "quota_show",
+          this.storeInfo.quota_show || 0
+        );
+        this.$set(
+          this.attr.productSelect,
+          "product_stock",
+          this.storeInfo.product_stock || 0
+        );
         this.$set(this, "attrValue", "");
         this.$set(this, "attrTxt", "请选择");
       } else if (!productSelect && !productAttr.length) {
         this.$set(this.attr.productSelect, "store_name", this.storeInfo.title);
         this.$set(this.attr.productSelect, "image", this.storeInfo.image);
         this.$set(this.attr.productSelect, "price", this.storeInfo.price);
-        this.$set(this.attr.productSelect, "quota", 0);
-        this.$set(this.attr.productSelect, "quota_show", 0);
-        this.$set(this.attr.productSelect, "product_stock", 0);
+        this.$set(this.attr.productSelect, "quota", this.storeInfo.quota || 0);
+        this.$set(
+          this.attr.productSelect,
+          "quota_show",
+          this.storeInfo.quota_show || 0
+        );
+        this.$set(
+          this.attr.productSelect,
+          "product_stock",
+          this.storeInfo.product_stock || 0
+        );
         this.$set(
           this.attr.productSelect,
           "unique",

@@ -114,6 +114,9 @@ class StoreOrder extends AuthController
                 $value['productInfo']['store_name'] = StoreOrderCartInfo::getSubstrUTf8($value['productInfo']['store_name'], 10, 'UTF-8', '');
                 $product[] = $value;
             }
+            if(!$product){
+                return JsonService::fail('订单商品获取失败,无法打印!');
+            }
             $res = YLYService::instance()->setContent(sys_config('site_name'), is_object($order) ? $order->toArray() : $order, $product)->orderPrinting();
             if ($res) {
                 return JsonService::successful('打印成功');
@@ -277,7 +280,7 @@ class StoreOrder extends AuthController
             //改价短信提醒
             if ($data['pay_price'] != $pay_price) {
                 $switch = sys_config('price_revision_switch') ? true : false;
-                ShortLetterRepositories::send($switch, $source_info['user_phone'], ['order_id' => $source_info, 'pay_price' => $source_info['pay_price']], 'PRICE_REVISION_CODE');
+                ShortLetterRepositories::send($switch, $orderInfo->user_phone, ['order_id' => $orderInfo->order_id, 'pay_price' => $orderInfo->pay_price], 'PRICE_REVISION_CODE');
             }
             event('StoreProductOrderEditAfter', [$data, $id]);
             StoreOrderStatus::setStatus($id, 'order_edit', '修改商品总价为：' . $data['total_price'] . ' 实际支付金额' . $data['pay_price']);

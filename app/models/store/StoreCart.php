@@ -45,6 +45,12 @@ class StoreCart extends BaseModel
     {
         if ($cart_num < 1) $cart_num = 1;
         if ($seckill_id) {
+            if (!$product_attr_unique) {
+                $unique = StoreProduct::getSingleAttrUnique($seckill_id, 1);
+                if ($unique) {
+                    $product_attr_unique = $unique;
+                }
+            }
             if (!StoreSeckill::isSeckillEnd($seckill_id))
                 return self::setErrorInfo('活动已结束');
             $StoreSeckillinfo = StoreSeckill::getValidProduct($seckill_id);
@@ -60,6 +66,12 @@ class StoreCart extends BaseModel
             if ($product_stock < $cart_num)
                 return self::setErrorInfo('该产品库存不足' . $cart_num);
         } elseif ($bargain_id) {
+            if (!$product_attr_unique) {
+                $unique = StoreProduct::getSingleAttrUnique($bargain_id, 2);
+                if ($unique) {
+                    $product_attr_unique = $unique;
+                }
+            }
             if (!StoreBargain::validBargain($bargain_id))
                 return self::setErrorInfo('该产品已下架或删除');
             $StoreBargainInfo = StoreBargain::getBargain($bargain_id);
@@ -70,6 +82,12 @@ class StoreCart extends BaseModel
             if ($product_stock < $cart_num)
                 return self::setErrorInfo('该产品库存不足' . $cart_num);
         } elseif ($combination_id) {//拼团
+            if (!$product_attr_unique) {
+                $unique = StoreProduct::getSingleAttrUnique($combination_id, 3);
+                if ($unique) {
+                    $product_attr_unique = $unique;
+                }
+            }
             $StoreCombinationInfo = StoreCombination::getCombinationOne($combination_id);
             if (!$StoreCombinationInfo)
                 return self::setErrorInfo('该产品已下架或删除');
@@ -83,6 +101,12 @@ class StoreCart extends BaseModel
             if ($product_stock < $cart_num)
                 return self::setErrorInfo('该产品库存不足' . $cart_num);
         } else {
+            if (!$product_attr_unique) {
+                $unique = StoreProduct::getSingleAttrUnique($product_id);
+                if ($unique) {
+                    $product_attr_unique = $unique;
+                }
+            }
             if (!StoreProduct::isValidProduct($product_id))
                 return self::setErrorInfo('该产品已下架或删除');
             if (!StoreProductAttr::issetProductUnique($product_id, $product_attr_unique))

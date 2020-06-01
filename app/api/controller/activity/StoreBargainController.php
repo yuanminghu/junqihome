@@ -13,7 +13,9 @@ use app\admin\model\system\SystemAttachment;
 use app\models\routine\{
     RoutineCode, RoutineTemplate
 };
-use app\models\store\{StoreBargain, StoreBargainUser, StoreBargainUserHelp, StoreOrder, StoreProductAttr};
+use app\models\store\{
+    StoreBargain, StoreBargainUser, StoreBargainUserHelp, StoreOrder, StoreProductAttr
+};
 use crmeb\services\{
     GroupDataService, UtilService, WechatTemplateService
 };
@@ -77,10 +79,10 @@ class StoreBargainController
         $data['userInfo']['uid'] = $user['uid'];
         $data['userInfo']['nickname'] = $user['nickname'];
         $data['userInfo']['avatar'] = $user['avatar'];
-        $bargain['description'] = htmlspecialchars_decode(StoreDescription::getDescription($id,2));
+        $bargain['description'] = htmlspecialchars_decode(StoreDescription::getDescription($id, 2));
         list($productAttr, $productValue) = StoreProductAttr::getProductAttrDetail($id, $user['uid'], 0, 2);
         foreach ($productValue as $k => $v) {
-            $v['product_stock'] = StoreProductAttrValue::where('product_id',$bargain['product_id'])->where('suk',$v['suk'])->where('type',0)->value('stock');
+            $v['product_stock'] = StoreProductAttrValue::where('product_id', $bargain['product_id'])->where('suk', $v['suk'])->where('type', 0)->value('stock');
             $bargain['attr'] = $v;
         }
         $data['bargain'] = $bargain;
@@ -195,7 +197,7 @@ class StoreBargainController
         $data['userBargainStatus'] = StoreBargainUserHelp::isBargainUserHelpCount($bargainId, $bargainUserUid, $request->uid());
         if (!$bargainId || !$bargainUserUid) return app('json')->fail('参数错误');
         $bargainUserTableId = StoreBargainUser::getBargainUserTableId($bargainId, $bargainUserUid);//TODO 获取用户参与砍价表编号
-        if ($bargainUserTableId){
+        if ($bargainUserTableId) {
             $count = StoreBargainUserHelp::getBargainUserHelpPeopleCount($bargainId, $bargainUserUid);//TODO 获取砍价帮总人数
             $price = StoreBargainUserHelp::getSurplusPrice($bargainId, $bargainUserUid);//TODO 获取砍价剩余金额
             $alreadyPrice = StoreBargainUser::getBargainUserPrice($bargainUserTableId);//TODO 用户已经砍掉的价格 好友砍价之后获取用户已经砍掉的价格
@@ -205,9 +207,9 @@ class StoreBargainController
             $data['status'] = StoreBargainUser::getBargainUserStatusEnd($bargainUserTableId);
             $data['alreadyPrice'] = $alreadyPrice;
             $data['pricePercent'] = $pricePercent > 10 ? $pricePercent : 10;
-        }else{
+        } else {
             $data['count'] = 0;
-            $data['price'] = StoreBargain::where('id',$bargainId)->value('price - min_price');
+            $data['price'] = StoreBargain::where('id', $bargainId)->value('price - min_price');
             $data['status'] = StoreBargainUser::getBargainUserStatusEnd($bargainUserTableId);
             $data['alreadyPrice'] = 0;
             $data['pricePercent'] = 0;

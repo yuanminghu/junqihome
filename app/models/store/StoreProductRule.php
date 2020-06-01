@@ -27,8 +27,9 @@ class StoreProductRule extends BaseModel
     public static function sysPage($where)
     {
         $model = new self;
-        if ($where['rule_name']) $model = $model->where('rule', 'LIKE', '%' . $where['rule_name'] . '%');
+        if ($where['rule_name']) $model = $model->where('rule_name', 'LIKE', '%' . $where['rule_name'] . '%');
         $model = $model->order('id desc');
+        $count = $model->count();
         $list = $model->page((int)$where['page'], (int)$where['limit'])
             ->select()
             ->each(function ($item) {
@@ -43,7 +44,6 @@ class StoreProductRule extends BaseModel
                 }
             });
         $data = count($list) ? $list->toArray() : [];
-        $count = $model->count();
         return compact('count', 'data');
     }
 

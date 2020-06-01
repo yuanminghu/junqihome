@@ -61,15 +61,34 @@
 
     //点击事件绑定
     $(".sub-btn").on("click",function(){
-        var ids=layList.getCheckData().getIds('id');
-        var pics=layList.getCheckData().getIds('image');
-        parent.$f.changeField('image',pics);
-        parent.$f.changeField('product_id',ids);
+        var ids = layList.getCheckData().getIds('id');
+        var pics = layList.getCheckData().getIds('image');
+        var p_ids = parent.$f.getValue('product_id');
+        var p_pics = parent.$f.getValue('image');
+
+        var ids_arr;
+        if(typeof (p_ids) != 'string' && p_ids != 0){
+            ids_arr = p_ids.concat(ids);
+        }else{
+            ids_arr = ids;
+        }
+        var pics_arr = p_pics.concat(pics);
+        parent.$f.changeField('image',distinct(pics_arr));
+        parent.$f.changeField('product_id',distinct(ids_arr));
         parent.$f.closeModal(parentinputname);
     });
     //查询
     layList.search('search',function(where){
         layList.reload(where);
     });
+    function distinct (arr) {
+        var newArr = [];
+        for( i = 0; i < arr.length; i++) {
+            if(!newArr.includes(arr[i])) {
+                newArr.push(arr[i])
+            }
+        }
+        return newArr
+    }
 </script>
 {/block}

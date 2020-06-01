@@ -113,9 +113,13 @@ class StoreProduct extends BaseModel
         if ($salesOrder) $baseOrder = $salesOrder == 'desc' ? 'sales DESC' : 'sales ASC';//虚拟销量
         if ($baseOrder) $baseOrder .= ', ';
         $model->order($baseOrder . 'sort DESC, add_time DESC');
-        $list = $model->page((int)$page, (int)$limit)->field('id,store_name,cate_id,image,IFNULL(sales,0) + IFNULL(ficti,0) as sales,price,stock')->select()->each(function ($item) use ($uid, $type) {
+        $list = $model->page((int)$page, (int)$limit)->field('id,store_name,cate_id,image,IFNULL(sales,0) + IFNULL(ficti,0) as sales,price,stock,spec_type')->select()->each(function ($item) use ($uid, $type) {
             if ($type) {
-                $item['is_att'] = StoreProductAttrValueModel::where('product_id', $item['id'])->count() ? true : false;
+                if ($item['spec_type']) {
+                    $item['is_att'] = StoreProductAttrValueModel::where('product_id', $item['id'])->count() ? true : false;
+                } else {
+                    $item['is_att'] = false;
+                }
                 if ($uid) $item['cart_num'] = StoreCart::where('is_pay', 0)->where('is_del', 0)->where('is_new', 0)->where('type', 'product')->where('product_id', $item['id'])->where('uid', $uid)->value('cart_num');
                 else $item['cart_num'] = 0;
                 if (is_null($item['cart_num'])) $item['cart_num'] = 0;
@@ -337,6 +341,22 @@ class StoreProduct extends BaseModel
     public static function isValidProduct($productId)
     {
         return self::be(['id' => $productId, 'is_del' => 0, 'is_show' => 1]) > 0;
+    }
+
+    /**
+     * 获取单个商品得属性unique
+     * @param int $productId
+     * @param int $type
+     * @return bool|mixed
+     */
+    public static function getSingleAttrUnique(int $productId, int $type = 0)
+    {
+        if (self::be(['id' => $productId, 'spec_type' => 1])) {
+            return false;
+        } else {
+            $unique = StoreProductAttr::storeProductAttrValueDb()->where(['product_id' => $productId, 'type' => $type])->value('unique');
+            return $unique ?: false;
+        }
     }
 
     public static function getProductStock($productId, $uniqueId = '')
@@ -565,7 +585,7 @@ class StoreProduct extends BaseModel
         $activity = explode(',', $activity);
         $activityId = [];
         $time = 0;
-        $seckillId = StoreSeckill::where('is_del', 0)->where('status', 1)->where('start_time', '<=', time())->where('stop_time', '>=', time()-86400)->where('product_id', $id)->field('id,time_id')->select();
+        $seckillId = StoreSeckill::where('is_del', 0)->where('status', 1)->where('start_time', '<=', time())->where('stop_time', '>=', time() - 86400)->where('product_id', $id)->field('id,time_id')->select();
         if ($seckillId) {
             foreach ($seckillId as $v) {
                 $timeInfo = GroupDataService::getDataNumber((int)$v['time_id']);
@@ -579,7 +599,7 @@ class StoreProduct extends BaseModel
         }
         $bargainId = StoreBargain::where('is_del', 0)->where('status', 1)->where('start_time', '<=', time())->where('stop_time', '>=', time())->where('product_id', $id)->value('id');
         if ($bargainId) $activityId[2] = $bargainId;
-        $combinationId = StoreCombination::where('is_del', 0)->where('is_show',1)->where('start_time', '<=', time())->where('stop_time', '>=', time())->where('product_id', $id)->value('id');
+        $combinationId = StoreCombination::where('is_del', 0)->where('is_show', 1)->where('start_time', '<=', time())->where('stop_time', '>=', time())->where('product_id', $id)->value('id');
         if ($combinationId) $activityId[3] = $combinationId;
         $data = [];
         foreach ($activity as $k => $v) {

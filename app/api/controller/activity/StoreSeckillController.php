@@ -4,6 +4,7 @@ namespace app\api\controller\activity;
 
 use app\admin\model\store\StoreDescription;
 use app\admin\model\store\StoreProductAttrValue;
+use app\models\store\StoreProduct;
 use app\models\store\StoreProductAttr;
 use app\models\store\StoreProductRelation;
 use app\models\store\StoreProductReply;
@@ -143,12 +144,23 @@ class StoreSeckillController
                 $data['replyChance'] = bcmul($data['replyChance'], 100, 3);
             }
         } else $data['replyChance'] = 0;
-        list($productAttr, $productValue) = StoreProductAttr::getProductAttrDetail($id, $uid, 0, 1);
-        foreach ($productValue as $k => $v) {
-            $productValue[$k]['product_stock'] = StoreProductAttrValue::where('product_id', $storeInfo['product_id'])->where('suk', $v['suk'])->where('type', 0)->value('stock');
+        if (StoreProduct::be(['spec_type' => 1, 'id' => $storeInfo['product_id']])) {
+            list($productAttr, $productValue) = StoreProductAttr::getProductAttrDetail($id, $uid, 0, 1);
+            foreach ($productValue as $k => $v) {
+                $productValue[$k]['product_stock'] = StoreProductAttrValue::where('product_id', $storeInfo['product_id'])->where('suk', $v['suk'])->where('type', 0)->value('stock');
+            }
+            $data['productAttr'] = $productAttr;
+            $data['productValue'] = $productValue;
+        } else {
+            $data['productAttr'] = [];
+            $data['productValue'] = [];
+            list($productAttr, $productValue) = StoreProductAttr::getProductAttrDetail($id, $uid, 0, 1);
+            $value = $productValue['默认'] ?? [];
+            $data['storeInfo']['product_stock'] = $value['stock'] ?? 0;
+            $data['storeInfo']['quota'] = $value['quota'] ?? 0;
+            $data['storeInfo']['quota_show'] = $value['quota_show'] ?? 0;
         }
-        $data['productAttr'] = $productAttr;
-        $data['productValue'] = $productValue;
+        $data['isSeckillEnd'] = StoreSeckill::checkStatus($id);
         return app('json')->successful($data);
     }
 }

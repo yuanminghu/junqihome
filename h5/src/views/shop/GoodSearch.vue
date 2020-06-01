@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div ref="container">
     <div class="searchGood">
       <div class="search acea-row row-between-wrapper">
         <div class="input acea-row row-between-wrapper">
@@ -75,6 +75,10 @@ export default {
   },
   mounted: function() {
     this.getData();
+    this.$scroll(this.$refs.container, () => {
+      console.log(123);
+      !this.loading && this.getGoodlist();
+    });
   },
   methods: {
     submit() {

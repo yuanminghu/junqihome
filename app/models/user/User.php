@@ -450,7 +450,7 @@ class User extends BaseModel
         if ($orderBy === '') $orderBy = 'u.add_time desc';
         $model = $model->alias(' u');
         $sql = StoreOrder::where('o.paid', 1)->group('o.uid')->field(['SUM(o.pay_price) as numberCount', 'o.uid', 'o.order_id'])
-            ->where('o.is_del', 0)->where('o.is_system_del', 0)->alias('o')->fetchSql(true)->select();
+            ->where('o.is_del', 0)->where('o.refund_status', 'in', [0,1])->where('o.is_system_del', 0)->alias('o')->fetchSql(true)->select();
         $model = $model->join("(" . $sql . ") p", 'u.uid = p.uid', 'LEFT');
         $model = $model->where('u.uid', 'IN', $uid);
         $model = $model->field("u.uid,u.nickname,u.avatar,from_unixtime(u.add_time,'%Y/%m/%d') as time,u.spread_count as childCount,u.pay_count as orderCount,p.numberCount");
@@ -612,23 +612,21 @@ class User extends BaseModel
      */
     public static function brokerageRank($data)
     {
-        $model = self::where('status', 1);
+        $model = UserBill::alias('b')->join('user u', 'b.uid = u.uid');
+        $model = $model->where('b.category', 'now_money')->where('b.type', 'brokerage');
         switch ($data['type']) {
             case 'week':
-                $model = $model->whereIn('uid', function ($query) {
-                    $query->name('user_bill')->where('category', 'now_money')->where('type', 'brokerage')
-                        ->whereWeek('add_time')->field('uid');
-                });
+                $model = $model->whereWeek('b.add_time');
                 break;
             case 'month':
-                $model = $model->whereIn('uid', function ($query) {
-                    $query->name('user_bill')->where('category', 'now_money')->where('type', 'brokerage')
-                        ->whereMonth('add_time')->field('uid');
-                });
+                $model = $model->whereMonth('b.add_time');
                 break;
         }
-        $users = $model->field('uid,nickname,avatar,brokerage_price')->order('brokerage_price desc')
-            ->page((int)$data['page'], (int)$data['limit'])->select();
+        $users = $model->group('b.uid')
+            ->field('b.uid,u.nickname,u.avatar,SUM(IF(pm=1,`number`,-`number`)) as brokerage_price')
+            ->order('brokerage_price desc')
+            ->page((int)$data['page'], (int)$data['limit'])
+            ->select();
         return count($users) ? $users->toArray() : [];
     }
 

@@ -268,7 +268,6 @@
       @checked="couponClose"
       @close="couponClose"
     ></Coupon-window>
-
     <div style="height:1.2rem;"></div>
     <div>
       <iframe
@@ -542,7 +541,7 @@ export default {
 .index .follow {
   z-index: 100000;
 }
-  .keep{
-    text-align: center;
-  }
+.keep {
+  text-align: center;
+}
 </style>

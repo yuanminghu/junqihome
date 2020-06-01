@@ -73,7 +73,7 @@
             {field: 'rule_name', title: '规格名称', align: 'center'},
             {field: 'attr_name', title: '商品规格', align: 'center'},
             {field: 'attr_value', title: '商品属性', align: 'center'},
-            {field: 'right', title: '操作', align: 'center', toolbar: '#act', width: '10%', align: 'center'},
+            {field: 'right', title: '操作', align: 'center', toolbar: '#act', width: '10%'},
         ];
     });
     //自定义方法

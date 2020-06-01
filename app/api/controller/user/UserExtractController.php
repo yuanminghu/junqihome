@@ -67,7 +67,7 @@ class UserExtractController
             ['cardnum', ''],
             ['weixin', ''],
         ], $request);
-        if (!preg_match('/^(([1-9]\d*)|0)(\.\d{1-2})?$/', $extractInfo['money'])) return app('json')->fail('提现金额输入有误');
+        if (!preg_match('/^([1-9][0-9]*)+(.[0-9]{1,2})?$/', $extractInfo['money'])) return app('json')->fail('提现金额输入有误');
         $user = $request->user();
         $broken_time = intval(sys_config('extract_time'));
         $search_time = time() - 86400 * $broken_time;

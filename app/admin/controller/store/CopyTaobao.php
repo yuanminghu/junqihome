@@ -114,7 +114,14 @@ class CopyTaobao extends AuthController
     public function Utf8String($str)
     {
         $encode = mb_detect_encoding($str, array("ASCII", 'UTF-8', "GB2312", "GBK", 'BIG5'));
-        if (strtoupper($encode) != 'UTF-8') $str = mb_convert_encoding($str, 'utf-8', $encode);
+        if(strtoupper($encode) == 'UTF-8'){
+
+        }else if(strtolower($encode) == 'cp936'){
+//            $str = iconv('GBK', 'utf-8', $str);
+            $str = mb_convert_encoding($str, 'utf-8', 'GBK');
+        }else{
+            $str = mb_convert_encoding($str, 'utf-8', $encode);
+        }
         return $str;
     }
 
@@ -778,7 +785,8 @@ class CopyTaobao extends AuthController
             return false;
         }
         curl_close($ch);
-        return mb_convert_encoding($response, 'utf-8', 'GB2312');
+//        return mb_convert_encoding($response, 'utf-8', 'auto');
+        return $response;
     }
 
     //检测远程文件是否存在
@@ -800,7 +808,7 @@ class CopyTaobao extends AuthController
         if (!strlen(trim($name))) {
             //TODO 获取要下载的文件名称
             $downloadImageInfo = $this->getImageExtname($url);
-            if(!$this->checkExtname($url,$downloadImageInfo['ext_name'])){
+            if (!$this->checkExtname($url, $downloadImageInfo['ext_name'])) {
                 return JsonService::fail('文件后缀不合法');
             }
             $name = $downloadImageInfo['file_name'];
@@ -875,10 +883,9 @@ class CopyTaobao extends AuthController
      * @param string $ex
      * @return bool
      */
-    public function checkExtname($url = '',$ex = 'jpg')
+    public function checkExtname($url = '', $ex = 'jpg')
     {
-        if(in_array($ex, ['jpg', 'jpeg', 'gif', 'png', 'swf', 'bmp']) && ( function_exists('getimagesize') && !@getimagesize($url) ))
-        {
+        if (in_array($ex, ['jpg', 'jpeg', 'gif', 'png', 'swf', 'bmp', 'pcx', 'tif', 'tga', 'exif'])) {
             return true;
         }
         return false;
